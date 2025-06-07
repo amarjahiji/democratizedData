@@ -1,17 +1,13 @@
-# Ignore Maven target directories
+
 **/target/
 
-# IntelliJ IDEA project files
 **/.idea/
 **/*.iml
 
-# Logs
 *.log
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# Environment/config
 .env
 
