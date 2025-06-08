@@ -1,1 +1,12 @@
-spring.application.name=APIGateway
+spring:
+  application:
+    name: APIGateway
+  cloud:
+    gateway:
+
+server:
+  port: 8080
+
+jwt:
+  secret: your-very-long-random-secret
+
