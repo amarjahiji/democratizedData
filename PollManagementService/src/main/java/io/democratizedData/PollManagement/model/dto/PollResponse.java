@@ -9,7 +9,6 @@ import java.util.List;
 @Data
 @Builder
 public class PollResponse {
-
     private String id;
     private String title;
     private String question;
