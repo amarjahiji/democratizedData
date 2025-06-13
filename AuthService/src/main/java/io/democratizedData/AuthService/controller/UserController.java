@@ -31,7 +31,7 @@ public class UserController {
         return response != null ? ResponseEntity.ok(Collections.singletonMap("token", response)) : ResponseEntity.status(401).body("Invalid credentials");
     }
 
-    @GetMapping("/validate-token")
+    @GetMapping("/validate")
     public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> userDetails = userService.validateTokenGetUser(authHeader);
         return ResponseEntity.ok(userDetails);

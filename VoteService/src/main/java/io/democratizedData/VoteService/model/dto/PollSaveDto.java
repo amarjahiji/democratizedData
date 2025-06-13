@@ -7,5 +7,6 @@ public class PollSaveDto {
 
     private String pollId;
     private String option;
+    private String userId;
 
 }

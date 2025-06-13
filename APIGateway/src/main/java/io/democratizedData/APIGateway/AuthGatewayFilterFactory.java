@@ -14,7 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-@Component
+// Disabled to avoid conflicts with AuthFilter
+// @Component
 public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthGatewayFilterFactory.Config> {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthGatewayFilterFactory.class);
