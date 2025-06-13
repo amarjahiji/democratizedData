@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+jwt:
+  secret: secret-key
+
 spring:
   application:
     name: api-gateway
@@ -28,23 +31,58 @@ spring:
           predicates:
             - Path=/api/polls/**
           filters:
-            - name: AuthenticationFilter
+            - name: Auth
 
         # Protected Routes - Vote Service
         - id: vote-service
           uri: http://localhost:8083
           predicates:
-            - Path=/votes/**
+            - Path=/api/votes/**
           filters:
-            - name: AuthenticationFilter
+            - name: Auth
 
-# Service URLs
+      # Global CORS configuration
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+
+# Service URLs configuration
 services:
   auth-service:
     url: http://localhost:8081
-    validate-endpoint: /auth/validate-token
+    validate-endpoint: /auth/validate
 
+
+  poll-management-service:
+    url: http://localhost:8082
+  vote-service:
+    url: http://localhost:8083
+
+# Management endpoints for actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging configuration
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    com.democratizeddata: DEBUG
+    io.democratizedData.gateway: DEBUG
+    reactor.netty: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

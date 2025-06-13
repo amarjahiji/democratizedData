@@ -20,10 +20,8 @@ public class UserData {
     @JsonProperty("gender")
     private String gender;
 
-    // Default constructor
     public UserData() {}
 
-    // Constructor for Map conversion (from your auth service response)
     public UserData(Map<String, Object> userMap) {
         this.userId = userMap.get("userId") != null ?
                 Long.valueOf(userMap.get("userId").toString()) : null;
@@ -33,7 +31,6 @@ public class UserData {
         this.gender = (String) userMap.get("gender");
     }
 
-    // Constructor
     public UserData(Long userId, String username, String role, String city, String gender) {
         this.userId = userId;
         this.username = username;
