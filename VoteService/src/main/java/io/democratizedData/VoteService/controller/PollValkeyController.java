@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 @RestController
-@RequestMapping("/valkey/poll")
+@RequestMapping("/poll")
 public class PollValkeyController {
 
     private final PollValkeyService pollValkeyService;

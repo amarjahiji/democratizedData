@@ -85,11 +85,10 @@ public abstract class AbstractValkeyService {
 
     public static RedissonClient getRedissonClient() {
         Config config = new Config();
-        config.useSingleServer()
-                .setAddress("valkey://localhost:6379");
-//                .setReadMode(ReadMode.MASTER_SLAVE)
-//                .setMasterAddress("valkey://127.0.0.1:6379")
-//                .setSlaveAddresses(Collections.singleton("valkeys://slave_endpoint"));
+        config.useMasterSlaveServers()
+                .setReadMode(ReadMode.MASTER_SLAVE)
+                .setMasterAddress("valkey://127.0.0.1:6379")
+                .setSlaveAddresses(Collections.singleton("valkey://127.0.0.1:6380"));
 
         config.setCodec(new SnappyCodecV2(new JsonJacksonCodec()));
 
