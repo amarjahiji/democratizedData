@@ -5,6 +5,7 @@ import io.democratizedData.VoteService.model.entity.PollVoteEntity;
 import io.democratizedData.VoteService.repository.PollVoteRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -20,6 +21,7 @@ public class PollDatabaseService {
                 .pollId(dto.getPollId())
                 .option(dto.getOption())
                 .gender(dto.getGender())
+                .voteDate(new Date())
                 .age(dto.getAge())
                 .build();
 

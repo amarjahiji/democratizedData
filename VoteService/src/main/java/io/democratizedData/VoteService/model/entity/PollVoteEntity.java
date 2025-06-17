@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "poll_stats")
@@ -15,7 +16,6 @@ import org.springframework.data.annotation.Id;
 @Builder
 public class PollVoteEntity {
     @jakarta.persistence.Id
-    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -30,5 +30,9 @@ public class PollVoteEntity {
 
     @Column(name = "age")
     private int age;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "vote_date", nullable = false)
+    private Date voteDate;
 
 }
