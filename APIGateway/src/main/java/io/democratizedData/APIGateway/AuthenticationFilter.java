@@ -56,10 +56,10 @@ public class AuthenticationFilter implements GatewayFilter {
     private Mono<UserInfo> validateToken(String token) {
         TokenValidationRequest validationRequest = new TokenValidationRequest(token);
 
-        return webClient.post()
+        return webClient.get()
                 .uri("http://localhost:8081/auth/validate-token")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .bodyValue(validationRequest)
+                .header(HttpHeaders.AUTHORIZATION, validationRequest.getToken())
                 .retrieve()
                 .bodyToMono(UserInfo.class);
     }

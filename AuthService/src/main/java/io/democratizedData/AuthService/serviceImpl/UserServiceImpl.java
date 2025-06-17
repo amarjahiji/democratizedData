@@ -10,8 +10,8 @@ import io.democratizedData.AuthService.model.dto.UserRegisterDto;
 import io.democratizedData.AuthService.model.entity.User;
 import io.democratizedData.AuthService.repository.UserRepository;
 import io.democratizedData.AuthService.service.UserService;
+import io.democratizedData.AuthService.util.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -28,10 +28,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
