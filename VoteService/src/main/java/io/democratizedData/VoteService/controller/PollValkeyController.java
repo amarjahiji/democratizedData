@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,10 +23,8 @@ public class PollValkeyController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> savePoll(@RequestBody PollSaveDto pollSaveDto, 
-                                     @RequestHeader(value = "X-User-Id", required = true) String userId) {
-        pollSaveDto.setUserId(userId);
-        pollValkeyService.savePollVote(pollSaveDto.getPollId(), pollSaveDto.getOption(), pollSaveDto.getUserId());
+    public ResponseEntity<?> savePoll(@RequestBody PollSaveDto pollSaveDto) {
+        pollValkeyService.savePollVote(pollSaveDto.getPollId(), pollSaveDto.getOption());
         return ResponseEntity.ok().build();
     }
 

@@ -6,8 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-// Disabled to avoid conflicts with AuthFilter
-// @Component
+@Component
 public class AuthenticationFilterGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthenticationFilterGatewayFilterFactory.Config> {
 
     public AuthenticationFilterGatewayFilterFactory() {

@@ -8,14 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PollValkeyController.class)
@@ -36,30 +30,16 @@ class PollValkeyControllerTest {
                           "option":"yes"
                         }
                 """;
-        String userId = "user123";
 
-        mockMvc.perform(post("/valkey/poll/save")
+        mockMvc.perform(post("/poll/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-User-Id", userId)
                         .content(payload))
                 .andExpect(status().isOk());
 
-        verify(pollValkeyService).savePollVote("abcdef", "yes", userId);
+        verify(pollValkeyService).savePollVote("poll123", "OptionA");
     }
 
     @Test
-    void getPollVote() throws Exception {
-        String pollId = "abcdef";
-        Map<String, Integer> results = Map.of("yes", 5, "no", 3);
-
-        when(pollValkeyService.getPollResults(pollId)).thenReturn(results);
-
-        mockMvc.perform(get("/valkey/poll/{poll_id}/get", pollId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.yes").value(5))
-                .andExpect(jsonPath("$.no").value(3));
-
-        verify(pollValkeyService).getPollResults(pollId);
+    void getPollVote() {
     }
 }

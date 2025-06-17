@@ -18,8 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
-// Disabled to avoid conflicts with AuthFilter
-// @Component
+@Component
 public class JwtRedirectFilter implements GlobalFilter, Ordered {
 
     @Value("${jwt.secret}")
