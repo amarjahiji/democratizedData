@@ -1,7 +1,7 @@
 package io.democratizedData.VoteService.controller;
 
 import io.democratizedData.VoteService.model.dto.PollSaveDto;
-import io.democratizedData.VoteService.model.entity.PollVoteEntity;
+import io.democratizedData.VoteService.model.entity.PollVote;
 import io.democratizedData.VoteService.service.PollDatabaseService;
 import io.democratizedData.VoteService.service.PollValkeyService;
 import org.springframework.http.MediaType;
@@ -27,7 +27,6 @@ public class PollValkeyController {
 
     private final PollValkeyService pollValkeyService;
     private final PollDatabaseService pollDatabaseService;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     public PollValkeyController(PollValkeyService pollValkeyService, PollDatabaseService pollDatabaseService) {
@@ -37,6 +36,7 @@ public class PollValkeyController {
 
     @PostMapping("/save")
     public ResponseEntity<?> savePoll(@RequestBody PollSaveDto pollSaveDto) {
+        final ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<?> valkeyFuture = executor.submit(() -> {
                 pollValkeyService.savePollVote(pollSaveDto.getPollId(), pollSaveDto.getOption());
@@ -90,22 +90,22 @@ public class PollValkeyController {
     }
 
     @GetMapping("/votes")
-    public ResponseEntity<List<PollVoteEntity>> getAllVotes() {
-        List<PollVoteEntity> votes = pollDatabaseService.getAllVotes();
+    public ResponseEntity<List<PollVote>> getAllVotes() {
+        List<PollVote> votes = pollDatabaseService.getAllVotes();
         return ResponseEntity.ok(votes);
     }
 
     @GetMapping("/{poll_id}/votes")
-    public ResponseEntity<List<PollVoteEntity>> getVotesByPollId(@PathVariable("poll_id") String pollId) {
-        List<PollVoteEntity> votes = pollDatabaseService.getVotesByPollId(pollId);
+    public ResponseEntity<List<PollVote>> getVotesByPollId(@PathVariable("poll_id") String pollId) {
+        List<PollVote> votes = pollDatabaseService.getVotesByPollId(pollId);
         return ResponseEntity.ok(votes);
     }
 
     @GetMapping("/{poll_id}/votes/{option}")
-    public ResponseEntity<List<PollVoteEntity>> getVotesByPollIdAndOption(
+    public ResponseEntity<List<PollVote>> getVotesByPollIdAndOption(
             @PathVariable("poll_id") String pollId,
             @PathVariable("option") String option) {
-        List<PollVoteEntity> votes = pollDatabaseService.getVotesByPollIdAndOption(pollId, option);
+        List<PollVote> votes = pollDatabaseService.getVotesByPollIdAndOption(pollId, option);
         return ResponseEntity.ok(votes);
     }
 

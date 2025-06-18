@@ -90,7 +90,7 @@ public abstract class AbstractValkeyService {
                 .setMasterAddress("valkey://127.0.0.1:6379")
                 .setSlaveAddresses(Collections.singleton("valkey://127.0.0.1:6380"));
 
-        config.setCodec(new SnappyCodecV2(new JsonJacksonCodec()));
+        config.setCodec(new JsonJacksonCodec());
 
         return Redisson.create(config);
     }

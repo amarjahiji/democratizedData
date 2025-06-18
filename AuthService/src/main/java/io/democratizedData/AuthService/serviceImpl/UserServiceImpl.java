@@ -78,9 +78,9 @@ public class UserServiceImpl implements UserService {
         Algorithm algorithm = Algorithm.HMAC256("secret-key");
         JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT jwt = verifier.verify(token);
-        String userId = jwt.getClaim("userId").asString();
+        String userId = jwt.getClaim("username").asString();
         String role = jwt.getClaim("role").asString();
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Map<String, Object> userDetails = new HashMap<>();
         userDetails.put("userId", userId);

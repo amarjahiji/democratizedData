@@ -1,134 +1,155 @@
 package io.democratizedData.VoteService.service;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import io.democratizedData.VoteService.model.entity.PollVote;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional()
 public class PollAnalyticsService {
-    private final JdbcTemplate jdbcTemplate;
 
-    public PollAnalyticsService(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Votes per option over time (daily)
     public Map<String, List<VotesOverTimeEntry>> getVotesOverTime(String pollId) {
-        String sql = "SELECT option, DATE(timestamp) as vote_date, COUNT(*) as votes " +
-                "FROM poll_votes WHERE poll_id = ? GROUP BY option, vote_date ORDER BY vote_date";
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+        Root<PollVote> root = query.from(PollVote.class);
 
-        List<VotesOverTimeEntry> rows = jdbcTemplate.query(sql, new Object[]{pollId}, (rs, rowNum) -> {
-            return new VotesOverTimeEntry(
-                    rs.getString("option"),
-                    rs.getDate("vote_date"),
-                    rs.getInt("votes")
-            );
-        });
+        query.select(cb.array(
+                        root.get("option"),
+                        cb.function("DATE", Date.class, root.get("voteDate")),
+                        cb.count(root)
+                ))
+                .where(cb.equal(root.get("pollId"), pollId))
+                .groupBy(root.get("option"), cb.function("DATE", Date.class, root.get("voteDate")))
+                .orderBy(cb.asc(cb.function("DATE", Date.class, root.get("voteDate"))));
 
-        // Group by option
-        Map<String, List<VotesOverTimeEntry>> result = new HashMap<>();
-        for (VotesOverTimeEntry entry : rows) {
-            result.computeIfAbsent(entry.option, k -> new ArrayList<>()).add(entry);
-        }
-        return result;
+        return entityManager.createQuery(query)
+                .getResultList()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        row -> (String) row[0],
+                        Collectors.mapping(
+                                row -> new VotesOverTimeEntry((String) row[0], (Date) row[1], ((Long) row[2]).intValue()),
+                                Collectors.toList()
+                        )
+                ));
     }
 
     // Percentage distribution per option
     public Map<String, Double> getPercentageDistribution(String pollId) {
-        String sql = "SELECT option, COUNT(*) as votes FROM poll_votes WHERE poll_id = ? GROUP BY option";
-        String totalSql = "SELECT COUNT(*) FROM poll_votes WHERE poll_id = ?";
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+        Root<PollVote> root = query.from(PollVote.class);
 
-        int totalVotes = jdbcTemplate.queryForObject(totalSql, Integer.class, pollId);
+        // Total votes
+        CriteriaQuery<Long> totalQuery = cb.createQuery(Long.class);
+        Root<PollVote> totalRoot = totalQuery.from(PollVote.class);
+        totalQuery.select(cb.count(totalRoot))
+                .where(cb.equal(totalRoot.get("pollId"), pollId));
+
+        Long totalVotes = entityManager.createQuery(totalQuery).getSingleResult();
         if (totalVotes == 0) {
             return Collections.emptyMap();
         }
 
-        List<OptionVotes> optionVotes = jdbcTemplate.query(sql, new Object[]{pollId}, (rs, rowNum) -> {
-            return new OptionVotes(rs.getString("option"), rs.getInt("votes"));
-        });
+        // Votes per option
+        query.select(cb.array(root.get("option"), cb.count(root)))
+                .where(cb.equal(root.get("pollId"), pollId))
+                .groupBy(root.get("option"));
 
-        Map<String, Double> result = new HashMap<>();
-        for (OptionVotes ov : optionVotes) {
-            double percentage = ov.votes * 100.0 / totalVotes;
-            result.put(ov.option, percentage);
-        }
-        return result;
+        return entityManager.createQuery(query)
+                .getResultList()
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Long) row[1] * 100.0 / totalVotes)
+                ));
     }
 
     // Demographics breakdown (gender and age groups)
     public Map<String, Map<String, Integer>> getDemographicsBreakdown(String pollId) {
-        Map<String, Integer> genderCounts = getGenderCounts(pollId);
-        Map<String, Integer> ageGroupCounts = getAgeGroupCounts(pollId);
-
         Map<String, Map<String, Integer>> result = new HashMap<>();
-        result.put("gender", genderCounts);
-        result.put("ageGroup", ageGroupCounts);
+        result.put("gender", getGenderCounts(pollId));
+        result.put("ageGroup", getAgeGroupCounts(pollId));
         return result;
     }
 
     private Map<String, Integer> getGenderCounts(String pollId) {
-        String sql = "SELECT gender, COUNT(*) as votes FROM poll_votes WHERE poll_id = ? GROUP BY gender";
-        List<GenderCount> rows = jdbcTemplate.query(sql, new Object[]{pollId}, (rs, rowNum) -> {
-            return new GenderCount(rs.getString("gender"), rs.getInt("votes"));
-        });
-        Map<String, Integer> result = new HashMap<>();
-        for (GenderCount gc : rows) {
-            result.put(gc.gender, gc.votes);
-        }
-        return result;
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+        Root<PollVote> root = query.from(PollVote.class);
+
+        query.select(cb.array(root.get("gender"), cb.count(root)))
+                .where(cb.equal(root.get("pollId"), pollId))
+                .groupBy(root.get("gender"));
+
+        return entityManager.createQuery(query)
+                .getResultList()
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
     }
 
     private Map<String, Integer> getAgeGroupCounts(String pollId) {
-        String sql = "SELECT " +
-                "CASE " +
-                " WHEN age < 20 THEN '<20' " +
-                " WHEN age BETWEEN 20 AND 29 THEN '20-29' " +
-                " WHEN age BETWEEN 30 AND 39 THEN '30-39' " +
-                " ELSE '40+' END as age_group, " +
-                "COUNT(*) as votes " +
-                "FROM poll_votes WHERE poll_id = ? GROUP BY age_group";
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+        Root<PollVote> root = query.from(PollVote.class);
 
-        List<AgeGroupCount> rows = jdbcTemplate.query(sql, new Object[]{pollId}, (rs, rowNum) -> {
-            return new AgeGroupCount(rs.getString("age_group"), rs.getInt("votes"));
-        });
+        // Create the case expression once and reuse it
+        Expression<Object> ageGroupExpression = cb.selectCase()
+                .when(cb.lessThan(root.get("age"), 20), "<20")
+                .when(cb.between(root.get("age"), 20, 29), "20-29")
+                .when(cb.between(root.get("age"), 30, 39), "30-39")
+                .otherwise("40+");
 
-        Map<String, Integer> result = new HashMap<>();
-        for (AgeGroupCount agc : rows) {
-            result.put(agc.ageGroup, agc.votes);
-        }
-        return result;
+        query.select(cb.array(ageGroupExpression, cb.count(root)))
+                .where(cb.equal(root.get("pollId"), pollId))
+                .groupBy(ageGroupExpression); // Use the same expression
+
+        return entityManager.createQuery(query)
+                .getResultList()
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
     }
 
     public String exportVotesOverTimeCsv(String pollId) {
-        // Get votes over time grouped by option
         Map<String, List<VotesOverTimeEntry>> votesOverTime = getVotesOverTime(pollId);
-
-        // CSV header
-        StringBuilder csvBuilder = new StringBuilder();
-        csvBuilder.append("Option,Date,Votes\n");
-
+        StringBuilder csvBuilder = new StringBuilder("Option,Date,Votes\n");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-        // Flatten map to CSV rows
-        for (Map.Entry<String, List<VotesOverTimeEntry>> entry : votesOverTime.entrySet()) {
-            String option = entry.getKey();
-            for (VotesOverTimeEntry voteEntry : entry.getValue()) {
-                String dateStr = sdf.format(voteEntry.date);
-                csvBuilder.append(option).append(",").append(dateStr).append(",").append(voteEntry.votes).append("\n");
-            }
-        }
+        votesOverTime.forEach((option, entries) ->
+                entries.forEach(entry ->
+                        csvBuilder.append(option)
+                                .append(",")
+                                .append(sdf.format(entry.date))
+                                .append(",")
+                                .append(entry.votes)
+                                .append("\n")
+                )
+        );
 
         return csvBuilder.toString();
     }
 
-    // Helper classes for query results
+    // Helper class for query results
     public static class VotesOverTimeEntry {
         public final String option;
         public final Date date;
@@ -137,36 +158,6 @@ public class PollAnalyticsService {
         public VotesOverTimeEntry(String option, Date date, int votes) {
             this.option = option;
             this.date = date;
-            this.votes = votes;
-        }
-    }
-
-    public static class OptionVotes {
-        public final String option;
-        public final int votes;
-
-        public OptionVotes(String option, int votes) {
-            this.option = option;
-            this.votes = votes;
-        }
-    }
-
-    public static class GenderCount {
-        public final String gender;
-        public final int votes;
-
-        public GenderCount(String gender, int votes) {
-            this.gender = gender;
-            this.votes = votes;
-        }
-    }
-
-    public static class AgeGroupCount {
-        public final String ageGroup;
-        public final int votes;
-
-        public AgeGroupCount(String ageGroup, int votes) {
-            this.ageGroup = ageGroup;
             this.votes = votes;
         }
     }

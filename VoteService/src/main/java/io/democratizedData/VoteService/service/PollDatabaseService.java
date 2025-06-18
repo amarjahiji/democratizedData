@@ -1,7 +1,7 @@
 package io.democratizedData.VoteService.service;
 
 import io.democratizedData.VoteService.model.dto.PollSaveDto;
-import io.democratizedData.VoteService.model.entity.PollVoteEntity;
+import io.democratizedData.VoteService.model.entity.PollVote;
 import io.democratizedData.VoteService.repository.PollVoteRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class PollDatabaseService {
     }
 
     public void savePollVoteToDatabase(PollSaveDto dto) {
-        PollVoteEntity entity = PollVoteEntity.builder()
+        PollVote entity = PollVote.builder()
                 .pollId(dto.getPollId())
                 .option(dto.getOption())
                 .gender(dto.getGender())
@@ -28,15 +28,15 @@ public class PollDatabaseService {
         pollVoteRepository.save(entity);
     }
 
-    public List<PollVoteEntity> getAllVotes() {
+    public List<PollVote> getAllVotes() {
         return pollVoteRepository.findAll();
     }
 
-    public List<PollVoteEntity> getVotesByPollId(String pollId) {
+    public List<PollVote> getVotesByPollId(String pollId) {
         return pollVoteRepository.findByPollId(pollId);
     }
 
-    public List<PollVoteEntity> getVotesByPollIdAndOption(String pollId, String option) {
+    public List<PollVote> getVotesByPollIdAndOption(String pollId, String option) {
         return pollVoteRepository.findByPollIdAndOption(pollId, option);
     }
 }

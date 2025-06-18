@@ -14,7 +14,6 @@ public class PollValkeyService extends AbstractValkeyService {
     public void savePollVote(String pollId, String option) {
         String mapKey = entityName + ":" + pollId;
         RMap<String, Integer> votes = getRMap(mapKey);
-        votes.fastPutIfAbsent(option, 0);
         votes.addAndGet(option, 1);
     }
 
