@@ -15,7 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class PollVoteEntity {
-    @jakarta.persistence.Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -34,5 +34,4 @@ public class PollVoteEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "vote_date", nullable = false)
     private Date voteDate;
-
 }
